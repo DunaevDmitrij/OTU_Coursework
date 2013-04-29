@@ -5,7 +5,10 @@ a2 = -1.973;
 a3 = -2.813;
 a4 = -0.64;
 
-k = 0.32;
+a11 = 3.12023;
+a21 = 3.90902;
+a31 = 2.14951;
+a41 = 0.360721;
 
 %Part 1 - make transfer function (need to count)
 
@@ -42,8 +45,24 @@ set(ax,'XGrid','on','YGrid','on');
 
 %Part 4 - correcting chain
 
-figure('Name','Nyquist for feedbacked system with P-regulator');
-nyquist(feedback((k.*system),1));
+figure('Name','Nyquist for feedbacked system with P-regulator 0,1');
+nyquist(feedback((0.1*system),1));
+
+figure('Name','Nyquist for feedbacked system with P-regulator special');
+nyquist(feedback(((a4/2)*system),1));
+
+figure('Name','Nyquist for feedbacked system with P-regulator 1');
+nyquist(feedback((system),1));
+
+corrector = tf([1],[1 a11 a21 a31 a41]);
+
+corrected = feedback((corrector),1)
+
+figure('Name','Step for corrected system with feedback');
+step(corrected);
+
+figure('Name','AFCHX for corrected system with feedback');
+nyquist(corrected);
 
 %Part 5 - regulation systems
 
@@ -70,10 +89,10 @@ step(feedback((regulator*system),1));
 %Part 5.2 - for corrected transfer function
 
 %Matrix from system
-A1=[0 0 0 0 1 0 0; 0 0 0 0 a1 1 0; 0 0 0 0 a2 a1 1; k 0 0 0 a3 a2 a1; 0 k 0 0 a4+k a3 a2; 0 0 k 0 0 a4+k a3; 0 0 0 k 0 0 a4+k];
+A1=[0 0 0 0 1 0 0; 0 0 0 0 a11 1 0; 0 0 0 0 a21 a11 1; 1 0 0 0 a31 a21 a11; 0 1 0 0 a4+1 a31 a21; 0 0 1 0 0 a41+1 a31; 0 0 0 1 0 0 a41+1];
 
 %Vector with constants
-d1=[16-a1; 110-a2; 420-a3; 959-(a4+k); 1304; 970; 300];
+d1=[16-a11; 110-a21; 420-a31; 959-(a41+1); 1304; 970; 300];
 
 %Vector with values for regulator
 b1=inv(A1)*d1
@@ -82,7 +101,7 @@ b1=inv(A1)*d1
 regulator1 = tf ( [ b1(1) b1(2) b1(3) b1(4) ] , [ 1 b1(5) b1(6) b1(7) ] )
 
 figure('Name','Step reaction of corrected stabilized system');
-step(feedback((regulator1*(feedback((k.*system),1))),1));
+step(feedback((regulator1*corrected),1));
 
 %Part 6 - graphics for new sistems from Part 5
 
@@ -99,10 +118,10 @@ impulse(feedback((regulator*system),1));
 %Part 6.1 - for corrected stabilized system
 
 figure('Name','LACH LFCH : corrected stabilized system');
-bode(feedback((regulator1*(feedback((k.*system),1))),1));
+bode(feedback((regulator1*corrected),1));
 
 figure('Name','Nyquist - razomknut : corrected stabilized system');
-nyquist(feedback((regulator1*(feedback((k.*system),1))),1));
+nyquist(feedback((regulator1*corrected),1));
 
 figure('Name','Impulse : corrected stabilized system');
-impulse(feedback((regulator1*(feedback((k.*system),1))),1));
+impulse(feedback((regulator1*corrected),1));
